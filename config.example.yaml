@@ -1,5 +1,5 @@
 app:
-  database_url: sqlite:///data/rankarr.db
+  database_url: sqlite:///data/tuntu.db
   timezone: Asia/Shanghai
 
 schedules:
@@ -10,28 +10,42 @@ schedules:
 profiles:
   default:
     period: weekly
-    destination: /115open/rankarr
-    ranking_sources:
-      - plugin: rankarr_jav.providers:JavDbRanking
+    discovery_sources:
+      - plugin: tuntu_jav.providers:JavDbRanking
         enabled: true
-      - plugin: rankarr_movies.providers:TmdbPopular
+      - plugin: tuntu_movies.providers:TmdbPopular
         enabled: false
         options:
           api_key: ${TMDB_API_KEY}
     candidate_sources:
-      - plugin: rankarr_jav.providers:SukebeiRss
+      - plugin: tuntu_jav.providers:SukebeiRss
         enabled: true
-      - plugin: rankarr_bittorrent.providers:Knaben
+      - plugin: tuntu_bittorrent.providers:Knaben
         enabled: true
     rules:
-      - plugin: rankarr.rules:MinSeeders
+      - plugin: tuntu.rules:MinSeeders
         options: { value: 1 }
-      - plugin: rankarr.rules:SizeRange
+      - plugin: tuntu.rules:SizeRange
         options: { min_mb: 500, max_mb: 51200 }
-    downloader:
-      plugin: rankarr_clouddrive2:CloudDrive2Client
-      options:
-        url: http://clouddrive2:19798
-        username: ${CD2_USERNAME}
-        password: ${CD2_PASSWORD}
-
+    routes:
+      - name: public-to-cloud
+        match:
+          transfer_kinds: [magnet]
+          exclude_tags: [private]
+        destination: /115open/tuntu
+        downloader:
+          plugin: tuntu_clouddrive2:CloudDrive2Client
+          options:
+            url: http://clouddrive2:19798
+            username: ${CD2_USERNAME}
+            password: ${CD2_PASSWORD}
+      - name: private-to-local
+        match:
+          require_tags: [private]
+        destination: /downloads/pt
+        downloader:
+          plugin: tuntu_qbittorrent:QBittorrentClient
+          options:
+            url: http://qbittorrent:8080
+            username: ${QBITTORRENT_USERNAME}
+            password: ${QBITTORRENT_PASSWORD}

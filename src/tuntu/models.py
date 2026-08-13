@@ -1,21 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any
 
 
+class TransferKind(StrEnum):
+    MAGNET = "magnet"
+    TORRENT = "torrent"
+    URL = "url"
+
+
 @dataclass(slots=True)
-class RankedItem:
-    """A content item discovered in one or more rankings."""
+class ContentItem:
+    """A wanted item discovered through a ranking, feed, search, or subscription."""
 
     key: str
-    rank: int
+    priority: int
     sources: list[str]
     title: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def merge_from(self, other: RankedItem) -> None:
-        self.rank = min(self.rank, other.rank)
+    def merge_from(self, other: ContentItem) -> None:
+        self.priority = min(self.priority, other.priority)
         for source in other.sources:
             if source not in self.sources:
                 self.sources.append(source)
@@ -31,7 +38,8 @@ class Candidate:
     identity: str
     item_key: str
     title: str
-    download_url: str
+    download_uri: str
+    transfer_kind: TransferKind
     sources: list[str]
     size_mb: float = 0
     seeders: int = 0
@@ -63,4 +71,3 @@ class DownloadReceipt:
     status: str
     external_id: str = ""
     message: str = ""
-
