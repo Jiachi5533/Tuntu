@@ -1,7 +1,7 @@
 # Contributing
 
 Contributions are welcome. Keep the core content-neutral and put
-source-specific behavior behind the protocols in `rankarr.contracts`.
+source-specific behavior behind the protocols in `tuntu.contracts`.
 
 Before opening a pull request:
 
@@ -12,4 +12,3 @@ Before opening a pull request:
 
 Provider contributions must use documented or publicly accessible interfaces
 and must not bypass access controls.
-

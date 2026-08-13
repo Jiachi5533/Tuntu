@@ -1,7 +1,7 @@
 [project]
-name = "rankarr"
+name = "tuntu"
 version = "0.1.0"
-description = "Pluggable ranking-to-download automation"
+description = "Open-source BitTorrent discovery, filtering, and download routing"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -23,4 +23,3 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
