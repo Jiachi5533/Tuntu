@@ -1,0 +1,37 @@
+app:
+  database_url: sqlite:///data/rankarr.db
+  timezone: Asia/Shanghai
+
+schedules:
+  - name: weekly-discovery
+    cron: "0 20 * * *"
+    profile: default
+
+profiles:
+  default:
+    period: weekly
+    destination: /115open/rankarr
+    ranking_sources:
+      - plugin: rankarr_jav.providers:JavDbRanking
+        enabled: true
+      - plugin: rankarr_movies.providers:TmdbPopular
+        enabled: false
+        options:
+          api_key: ${TMDB_API_KEY}
+    candidate_sources:
+      - plugin: rankarr_jav.providers:SukebeiRss
+        enabled: true
+      - plugin: rankarr_bittorrent.providers:Knaben
+        enabled: true
+    rules:
+      - plugin: rankarr.rules:MinSeeders
+        options: { value: 1 }
+      - plugin: rankarr.rules:SizeRange
+        options: { min_mb: 500, max_mb: 51200 }
+    downloader:
+      plugin: rankarr_clouddrive2:CloudDrive2Client
+      options:
+        url: http://clouddrive2:19798
+        username: ${CD2_USERNAME}
+        password: ${CD2_PASSWORD}
+
