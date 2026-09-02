@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block content %}
+{% if not runtime_configured %}<div class="notice notice-warning">{{ icon('alert') }}<span>CloudDrive2 尚未配置，手工预览和提交暂不可用。</span><a class="button button-secondary button-small" href="/settings">前往设置</a></div>{% endif %}
+<div class="two-column">
+  <section class="panel form-section">
+    <div class="panel-header"><div><p class="eyebrow">NUMBER SEARCH</p><h2>手工番号</h2><p class="muted">继承所选订阅的候选源、规则、排序和目录。</p></div></div>
+    <form id="number-preview-form" class="form-stack" novalidate>
+      <label for="number-profile">使用订阅</label><select id="number-profile" name="profile_id" required {% if not runtime_configured %}disabled{% endif %}><option value="">选择订阅</option>{% for profile in profiles %}<option value="{{ profile.id }}">{{ profile.name }}{% if not profile.enabled %}（已暂停）{% endif %}</option>{% endfor %}</select>
+      <label for="manual-number">番号</label><input id="manual-number" name="number" required maxlength="100" placeholder="例如 ABC-123" {% if not runtime_configured %}disabled{% endif %}>
+      <button class="button button-primary" type="submit" {% if not runtime_configured %}disabled{% endif %}>查询并筛选</button><p class="form-error" role="alert" data-form-error></p>
+    </form>
+  </section>
+  <section class="panel form-section">
+    <div class="panel-header"><div><p class="eyebrow">DIRECT MAGNET</p><h2>直接 magnet</h2><p class="muted">先规范化 BTIH 并检查全局重复，再确认提交。</p></div></div>
+    <form id="magnet-preview-form" class="form-stack" novalidate>
+      <label for="magnet-profile">使用订阅</label><select id="magnet-profile" name="profile_id" required {% if not runtime_configured %}disabled{% endif %}><option value="">选择订阅</option>{% for profile in profiles %}<option value="{{ profile.id }}">{{ profile.name }}</option>{% endfor %}</select>
+      <label for="manual-magnet">Magnet URI</label><textarea id="manual-magnet" name="magnet_uri" required maxlength="8000" rows="5" placeholder="magnet:?xt=urn:btih:..." {% if not runtime_configured %}disabled{% endif %}></textarea>
+      <label for="manual-title">标题（可选）</label><input id="manual-title" name="title" maxlength="500" {% if not runtime_configured %}disabled{% endif %}>
+      <button class="button button-primary" type="submit" {% if not runtime_configured %}disabled{% endif %}>预览去重结果</button><p class="form-error" role="alert" data-form-error></p>
+    </form>
+  </section>
+</div>
+<section class="panel result-panel" id="manual-results" aria-live="polite" aria-label="手工任务预览结果" hidden></section>
+{% endblock %}

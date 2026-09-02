@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import badge, empty, icon %}
+{% block header_actions %}<a class="button button-secondary" href="/settings">封面显示设置</a>{% endblock %}
+{% block content %}
+<section class="panel ranking-toolbar">
+  <div>
+    <p class="eyebrow">LATEST SNAPSHOT</p>
+    {% if snapshot %}<h2>{{ snapshot.profile_name }}</h2><p class="muted">{{ snapshot.started_at.strftime('%Y-%m-%d %H:%M') }} 抓取 · {{ snapshot['items']|length }} 条 · <a class="text-link text-link-inline" href="/runs/{{ snapshot.run_id }}">查看运行记录</a></p>{% else %}<h2>等待第一份榜单</h2><p class="muted">执行一次订阅预演后，这里会展示最新的榜单快照。</p>{% endif %}
+  </div>
+  <form class="ranking-filter" method="get" action="/rankings">
+    <label for="ranking-profile">订阅</label>
+    <select id="ranking-profile" name="profile_id">
+      <option value="">全部订阅中的最新榜单</option>
+      {% for profile in profiles %}<option value="{{ profile.id }}" {% if selected_profile_id == profile.id %}selected{% endif %}>{{ profile.name }}</option>{% endfor %}
+    </select>
+    <button class="button button-secondary" type="submit">切换</button>
+  </form>
+</section>
+{% if snapshot %}
+<div class="ranking-summary"><span>{{ icon('rankings') }} 榜单快照</span><span class="privacy-mode privacy-mode-{{ cover_display_mode }}">{% if cover_display_mode == 'none' %}无图模式{% elif cover_display_mode == 'blur' %}模糊模式{% else %}正常显示{% endif %}</span></div>
+<section class="ranking-grid" aria-label="{{ snapshot.profile_name }} 热榜">
+  {% for item in snapshot['items'] %}
+  <article class="ranking-card">
+    <div class="ranking-media">
+      <span class="ranking-number" aria-label="排名第 {{ item.best_rank }} 名">#{{ item.best_rank }}</span>
+      {% if cover_display_mode == 'none' %}
+      <div class="cover-placeholder cover-placeholder-private">{{ icon('rankings') }}<span>封面已关闭</span></div>
+      {% elif item.metadata.get('cover_url') %}
+      <img class="ranking-cover cover-mode-{{ cover_display_mode }}" src="{{ item.metadata.cover_url }}" alt="{{ item.normalized_key|upper }} 封面" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      {% else %}
+      <div class="cover-placeholder">{{ icon('rankings') }}<span>暂无封面</span></div>
+      {% endif %}
+    </div>
+    <div class="ranking-content">
+      <div class="ranking-card-head"><strong>{{ item.normalized_key|upper }}</strong>{{ badge(item.result_status, '已选候选' if item.result_status == 'selected' else '未找到磁力' if item.result_status == 'no_candidate' else '已过滤' if item.result_status == 'filtered' else item.result_status) }}</div>
+      <p title="{{ item.title }}">{{ item.title or item.normalized_key|upper }}</p>
+      <div class="ranking-sources">{% for ranking in item.rankings %}<span>{{ ranking.source }} #{{ ranking.rank }}</span>{% endfor %}</div>
+      <div class="ranking-actions">
+        {% if item.metadata.get('source_url') %}<a class="text-link text-link-inline" href="{{ item.metadata.source_url }}" target="_blank" rel="noopener noreferrer">查看来源 {{ icon('external') }}</a>{% endif %}
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<section class="panel">{{ empty('还没有可展示的热榜', '先新建订阅并执行一次预演；预演不会提交下载。') }}<div class="empty-actions"><a class="button button-primary" href="/profiles">前往订阅</a></div></section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:nyaa="https://nyaa.si/xmlns/nyaa"><channel>
+  <title>Fixture search</title>
+  <item>
+    <title>Fixture CHS release</title>
+    <link>https://example.invalid/view/1</link>
+    <nyaa:infoHash>CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC</nyaa:infoHash>
+    <nyaa:size>2.0 GiB</nyaa:size>
+    <nyaa:seeders>12</nyaa:seeders>
+  </item>
+  <item>
+    <title>Fixture regular release</title>
+    <nyaa:infoHash>DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD</nyaa:infoHash>
+    <nyaa:size>800 MiB</nyaa:size>
+    <nyaa:seeders>0</nyaa:seeders>
+  </item>
+</channel></rss>

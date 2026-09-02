@@ -1,0 +1,20 @@
+{
+  "hits": [
+    {
+      "title": "Fixture uncensored 2160p release",
+      "hash": "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+      "magnetUrl": "magnet:?xt=urn:btih:EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE&dn=Fixture",
+      "bytes": 3145728000,
+      "seeders": 9
+    },
+    {
+      "title": "Fixture release",
+      "hash": "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "magnetUrl": "magnet:?xt=urn:btih:FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+      "bytes": 524288000,
+      "seeders": 2
+    }
+  ],
+  "total": 2,
+  "max_score": null
+}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon, badge, empty %}
+{% block content %}
+<div class="watchlist-layout">
+  <section class="panel">
+    <div class="panel-header"><div><p class="eyebrow">WATCHLISTS</p><h2>人物、系列与关键词</h2><p class="muted">这里只跟踪作品元数据和处理状态，不自动接收下载链接。</p></div></div>
+    {% if watchlists %}<div class="watchlist-grid">
+      {% for item in watchlists %}<a class="watchlist-card" href="/watchlists/{{ item.id }}">
+        <div class="watchlist-card-head"><span class="source-icon">{{ icon('watchlists') }}</span>{{ badge(item.subject_type, {'person': '人物', 'series': '系列', 'keyword': '关键词'}.get(item.subject_type, item.subject_type)) }}</div>
+        <h3>{{ item.name }}</h3><p>{{ item.query }}</p>
+        {% if item.aliases %}<small>别名：{{ item.aliases|join('、') }}</small>{% endif %}
+        <div class="watchlist-counts"><strong>{{ item.summary.total }}</strong><span>作品</span><strong>{{ item.summary.get('downloaded', 0) }}</strong><span>已下载</span></div>
+      </a>{% endfor %}
+    </div>{% else %}{{ empty('还没有关注清单', '先创建一个人物、系列或关键词清单，再导入合法来源提供的作品元数据。') }}{% endif %}
+  </section>
+
+  <section class="panel watchlist-create-panel">
+    <div class="panel-header"><div><p class="eyebrow">NEW WATCHLIST</p><h2>新建清单</h2><p class="muted">名称和别名只用于匹配，不会自动触发下载。</p></div></div>
+    <form id="watchlist-create-form" class="form-stack">
+      <label for="watchlist-name">清单名称 <span>*</span></label><input id="watchlist-name" name="name" maxlength="200" required placeholder="例如：某位演员全部作品">
+      <label for="watchlist-type">关注类型 <span>*</span></label><select id="watchlist-type" name="subject_type" required><option value="person">人物</option><option value="series">系列</option><option value="keyword">关键词</option></select>
+      <label for="watchlist-query">主要检索词 <span>*</span></label><input id="watchlist-query" name="query" maxlength="300" required placeholder="使用原始语言名称更准确">
+      <label for="watchlist-aliases">别名</label><input id="watchlist-aliases" name="aliases" maxlength="1000" placeholder="多个别名用逗号分隔">
+      <p class="form-error" data-form-error role="alert"></p>
+      <button class="button button-primary" type="submit">{{ icon('plus') }}创建清单</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

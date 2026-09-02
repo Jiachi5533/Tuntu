@@ -2,36 +2,38 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .models import Candidate, DownloadReceipt, ContentItem
+from .models import Candidate, ContentItem
 
 
 class DiscoverySource(Protocol):
     name: str
 
-    def collect(self, scope: str) -> list[ContentItem]: ...
+    def collect(self, scope: str, *, run_id: str) -> list[ContentItem]: ...
 
 
 class CandidateSource(Protocol):
     name: str
 
-    def search(self, item: ContentItem) -> list[Candidate]: ...
+    def search(self, item: ContentItem, *, run_id: str) -> list[Candidate]: ...
 
 
-class Rule(Protocol):
-    name: str
-
-    def reject_reason(self, candidate: Candidate) -> str | None: ...
+class DownloadClientConfig(Protocol):
+    attention_after_seconds: int
+    required_stable_observations: int
 
 
 class DownloadClient(Protocol):
     name: str
+    config: DownloadClientConfig
 
-    def submit(self, candidate: Candidate, destination: str) -> DownloadReceipt: ...
+    def health_check(self) -> object: ...
 
+    def ensure_destination(self, destination: str) -> None: ...
 
-class DownloadRoute(Protocol):
-    name: str
+    def submit(self, magnet_uri: str, destination: str) -> object: ...
 
-    def accepts(self, candidate: Candidate) -> bool: ...
+    def get_task_signal(self, btih: str, destination: str) -> object: ...
 
-    def submit(self, candidate: Candidate) -> DownloadReceipt: ...
+    def snapshot(self, destination: str, *, force_refresh: bool) -> object: ...
+
+    def close(self) -> None: ...

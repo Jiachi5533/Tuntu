@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon, badge, empty %}
+{% block header_actions %}<a class="button button-primary" href="/profiles/new">{{ icon('plus') }}新建订阅</a>{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">PROFILES</p><h2>自动化订阅</h2><p class="muted">每项订阅独立保存榜单、候选源、规则、目录与计划。</p></div></div>
+  {% if profiles %}<div class="table-wrap"><table><thead><tr><th>名称</th><th>模式</th><th>周期</th><th>Top N</th><th>每日计划</th><th>状态</th><th><span class="sr-only">操作</span></th></tr></thead><tbody>
+  {% for profile in profiles %}<tr class="{% if profile.archived_at %}row-muted{% endif %}">
+    <td data-label="名称"><a class="cell-title" href="/profiles/{{ profile.id }}">{{ profile.name }}</a><small class="cell-subtitle">{{ profile.destination_subdir }}</small></td>
+    <td data-label="模式">{% if profile.auto_submit %}{{ badge('auto') }}{% else %}{{ badge('dry-run') }}{% endif %}</td>
+    <td data-label="周期">{{ profile.scope }}</td><td data-label="Top N" class="numeric">{{ profile.top_n }}</td><td data-label="每日计划" class="numeric">{{ profile.daily_time or '未设置' }}</td>
+    <td data-label="状态">{% if profile.archived_at %}{{ badge('archived') }}{% elif profile.enabled %}{{ badge('enabled') }}{% else %}{{ badge('disabled') }}{% endif %}</td>
+    <td class="table-actions">
+      {% if not profile.archived_at %}<button class="icon-button" type="button" data-action="run-profile" data-profile-id="{{ profile.id }}" title="立即预演" aria-label="立即预演 {{ profile.name }}">{{ icon('play') }}</button><button class="icon-button" type="button" data-action="toggle-profile" data-profile-id="{{ profile.id }}" data-enabled="{{ 'false' if profile.enabled else 'true' }}" aria-label="{{ '暂停' if profile.enabled else '恢复' }} {{ profile.name }}">{{ icon('pause' if profile.enabled else 'play') }}</button><button class="icon-button danger" type="button" data-action="archive-profile" data-profile-id="{{ profile.id }}" aria-label="归档 {{ profile.name }}">{{ icon('archive') }}</button>{% else %}<button class="icon-button" type="button" data-action="restore-profile" data-profile-id="{{ profile.id }}" aria-label="恢复 {{ profile.name }}">{{ icon('restore') }}</button>{% endif %}
+    </td>
+  </tr>{% endfor %}</tbody></table></div>{% else %}{{ empty('还没有订阅', '新建一项默认预演的订阅，先检查来源与规则结果。') }}{% endif %}
+</section>
+{% endblock %}

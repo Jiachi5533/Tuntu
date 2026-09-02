@@ -1,0 +1,72 @@
+{% from 'macros.html' import icon %}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{{ title }} · Tuntu</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}?v={{ asset_version }}">
+  <script src="{{ url_for('static', path='/app.js') }}?v={{ asset_version }}" defer></script>
+</head>
+<body class="auth-body" data-page="auth">
+  <main class="auth-layout">
+    <section class="auth-intro" aria-labelledby="auth-brand-title">
+      <div class="brand brand-large"><span class="brand-mark" aria-hidden="true">T</span><span><strong id="auth-brand-title">Tuntu</strong><small>吞入内容，吐出任务</small></span></div>
+      <h1>你的 BitTorrent<br>自动化控制面</h1>
+      <p>发现、清洗、筛选、提交和追踪，所有决定都有记录。</p>
+      <ul class="feature-list">
+        <li>{{ icon('check') }}默认预演，不会意外提交</li>
+        <li>{{ icon('check') }}全局 BTIH 与内容去重</li>
+        <li>{{ icon('check') }}来源故障隔离与规则解释</li>
+      </ul>
+    </section>
+    <section class="auth-card">
+      {% if not initialized %}
+      <p class="eyebrow">首次启动</p>
+      <h2>创建管理员</h2>
+      <p class="muted">从容器日志复制一次性 Setup Token。密码至少 12 位。</p>
+      {% if not setup_token_active %}<div class="notice notice-warning">{{ icon('alert') }}当前没有有效 Token，请执行 <code>tuntu reset-setup-token</code>。</div>{% endif %}
+      <form id="setup-form" class="form-stack" novalidate>
+        <label for="setup-token">Setup Token</label>
+        <input id="setup-token" name="token" type="password" autocomplete="one-time-code" required maxlength="256">
+        <label for="setup-username">管理员名称</label>
+        <input id="setup-username" name="username" autocomplete="username" required minlength="3" maxlength="50" value="admin">
+        <label for="setup-password">管理员密码</label>
+        <input id="setup-password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+        <button class="button button-primary" type="submit">完成初始化</button>
+        <p class="form-error" role="alert" data-form-error></p>
+      </form>
+      {% else %}
+      {% if setup_token_active %}
+      <p class="eyebrow">密码重置</p>
+      <h2>重置管理员密码</h2>
+      <p class="muted">输入刚由 CLI 生成的 Setup Token、原管理员名称和新密码。成功后所有旧会话失效。</p>
+      <form id="setup-form" class="form-stack" novalidate>
+        <label for="reset-token">Setup Token</label>
+        <input id="reset-token" name="token" type="password" autocomplete="one-time-code" required maxlength="256">
+        <label for="reset-username">原管理员名称</label>
+        <input id="reset-username" name="username" autocomplete="username" required minlength="3" maxlength="50">
+        <label for="reset-password">新管理员密码</label>
+        <input id="reset-password" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="256">
+        <button class="button button-danger" type="submit">重置密码并登录</button>
+        <p class="form-error" role="alert" data-form-error></p>
+      </form>
+      <div class="auth-divider"><span>或使用当前密码</span></div>
+      {% endif %}
+      <p class="eyebrow">管理员登录</p>
+      <h2>欢迎回来</h2>
+      <p class="muted">登录后继续管理订阅、运行与下载。</p>
+      <form id="login-form" class="form-stack" novalidate>
+        <label for="login-username">管理员名称</label>
+        <input id="login-username" name="username" autocomplete="username" required maxlength="100" autofocus>
+        <label for="login-password">密码</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required maxlength="256">
+        <button class="button button-primary" type="submit">登录 Tuntu</button>
+        <p class="form-error" role="alert" data-form-error></p>
+      </form>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

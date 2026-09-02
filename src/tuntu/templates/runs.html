@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import badge, empty, icon %}
+{% block content %}
+<section class="panel"><div class="panel-header"><div><p class="eyebrow">RUN HISTORY</p><h2>运行记录</h2><p class="muted">Run 结束后配置快照和筛选结论不会随订阅修改而变化。</p></div></div>
+{% if runs %}<div class="table-wrap"><table><thead><tr><th>开始时间</th><th>订阅</th><th>状态</th><th>触发</th><th>发现</th><th>接受候选</th><th>提交</th><th><span class="sr-only">操作</span></th></tr></thead><tbody>{% for run in runs %}<tr><td data-label="开始时间" class="numeric">{{ run.started_at.strftime('%Y-%m-%d %H:%M') }}</td><td data-label="订阅"><strong>{{ run.profile_name }}</strong></td><td data-label="状态">{{ badge(run.status) }}</td><td data-label="触发">{{ run.trigger }}</td><td data-label="发现" class="numeric">{{ run.stats.get('items_discovered', 0) }}</td><td data-label="接受候选" class="numeric">{{ run.stats.get('candidates_accepted', 0) }}</td><td data-label="提交" class="numeric">{{ run.stats.get('items_submitted', 0) }}</td><td><a class="row-link" href="/runs/{{ run.id }}" aria-label="查看运行详情">{{ icon('chevron') }}</a></td></tr>{% endfor %}</tbody></table></div>{% else %}{{ empty('还没有运行记录', '从订阅列表执行一次预演。') }}{% endif %}</section>
+{% endblock %}

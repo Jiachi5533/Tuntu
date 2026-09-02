@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <title>Fixture weekly feed</title>
+  <item>
+    <title>Fixture week</title>
+    <link>https://example.invalid/top-week/</link>
+    <description><![CDATA[
+      <ol>
+        <li><a href="https://example.invalid/one">ABC-1 fixture</a></li>
+        <li><a href="https://example.invalid/two">XYZ-00042 fixture</a></li>
+        <li>ABC-1 duplicate mention</li>
+      </ol>
+    ]]></description>
+  </item>
+  <item><title>Older fixture week</title><description>OLD-999</description></item>
+</channel></rss>

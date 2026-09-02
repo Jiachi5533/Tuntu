@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "query": "fixture",
+  "results": [
+    {
+      "title": "Fixture CHT release",
+      "infohash": "1111111111111111111111111111111111111111",
+      "size": 1073741824,
+      "seeders": 4,
+      "leechers": 1,
+      "verified": true
+    }
+  ],
+  "pagination": {"total": 1}
+}

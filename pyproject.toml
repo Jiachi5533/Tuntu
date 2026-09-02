@@ -1,18 +1,38 @@
 [project]
 name = "tuntu"
 version = "0.1.0"
-description = "Open-source BitTorrent discovery, filtering, and download routing"
+description = "Open-source BitTorrent discovery, filtering, and download automation"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = "MIT"
 authors = [{ name = "Jiachi5533" }]
+dependencies = [
+  "APScheduler>=3.11,<4",
+  "SQLAlchemy>=2.0,<3",
+  "alembic>=1.13,<2",
+  "argon2-cffi>=25,<26",
+  "fastapi>=0.116,<1",
+  "grpcio>=1.81.1,<2",
+  "httpx[socks]>=0.27,<1",
+  "jinja2>=3.1,<4",
+  "pydantic-settings>=2.10,<3",
+  "protobuf>=6.33.5,<7",
+  "uvicorn[standard]>=0.35,<1",
+]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
-  "License :: OSI Approved :: MIT License",
+  "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
+
+[project.optional-dependencies]
+dev = [
+  "grpcio-tools>=1.81.1,<1.82",
+  "pytest>=8,<10",
+]
+
+[project.scripts]
+tuntu = "tuntu.cli:main"
 
 [build-system]
 requires = ["setuptools>=75"]
@@ -21,5 +41,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"tuntu" = ["templates/*.html", "static/*.css", "static/*.js"]
+"tuntu.db.alembic" = ["script.py.mako"]
+"tuntu.downloaders" = ["*.proto"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "src"]

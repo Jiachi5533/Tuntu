@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from .contracts import CandidateSource, DiscoverySource, DownloadRoute, Rule
-from .models import Candidate, ContentItem, DownloadReceipt, Evaluation
+from .contracts import CandidateSource, DiscoverySource
+from .models import Candidate, ContentItem, ContentResult, ContentResultStatus
+from .rules import RuleSet
+from .selector import evaluation_sort_key, select_candidate
 
 
 class Pipeline:
@@ -11,64 +13,50 @@ class Pipeline:
         self,
         discovery_sources: Iterable[DiscoverySource],
         candidate_sources: Iterable[CandidateSource],
-        rules: Iterable[Rule] = (),
-        routes: Iterable[DownloadRoute] = (),
+        rules: RuleSet | None = None,
     ):
         self.discovery_sources = list(discovery_sources)
         self.candidate_sources = list(candidate_sources)
-        self.rules = list(rules)
-        self.routes = list(routes)
+        self.rules = rules or RuleSet()
 
-    def collect_items(self, scope: str) -> list[ContentItem]:
-        merged: dict[str, ContentItem] = {}
+    def collect_items(self, scope: str, *, run_id: str = "adhoc") -> list[ContentItem]:
+        merged: dict[tuple[str, str], ContentItem] = {}
         for source in self.discovery_sources:
-            for item in source.collect(scope):
-                key = item.key.casefold()
-                if key in merged:
-                    merged[key].merge_from(item)
+            for item in source.collect(scope, run_id=run_id):
+                if item.identity in merged:
+                    merged[item.identity].merge_from(item)
                 else:
-                    merged[key] = item
-        return sorted(merged.values(), key=lambda item: item.priority)
+                    merged[item.identity] = item
+        return sorted(merged.values(), key=lambda item: (item.best_rank, item.identity))
 
-    def discover(self, scope: str) -> tuple[list[ContentItem], list[Evaluation]]:
-        items = self.collect_items(scope)
-        candidates: dict[str, Candidate] = {}
-        for item in items:
+    def discover(self, scope: str, *, run_id: str = "adhoc") -> list[ContentResult]:
+        results: list[ContentResult] = []
+        for item in self.collect_items(scope, run_id=run_id):
+            candidates: dict[str, Candidate] = {}
             for source in self.candidate_sources:
-                for candidate in source.search(item):
-                    identity = candidate.identity.casefold()
-                    if identity in candidates:
-                        candidates[identity].merge_from(candidate)
+                for candidate in source.search(item, run_id=run_id):
+                    if candidate.item_identity != item.identity:
+                        raise ValueError("candidate does not belong to the searched content item")
+                    if candidate.btih in candidates:
+                        candidates[candidate.btih].merge_from(candidate)
                     else:
-                        candidates[identity] = candidate
+                        candidates[candidate.btih] = candidate
 
-        evaluations: list[Evaluation] = []
-        for candidate in candidates.values():
-            reasons = [reason for rule in self.rules if (reason := rule.reject_reason(candidate))]
-            evaluations.append(Evaluation(candidate=candidate, accepted=not reasons, reasons=reasons))
-        evaluations.sort(
-            key=lambda result: (
-                result.accepted,
-                result.candidate.seeders,
-                result.candidate.size_mb,
-            ),
-            reverse=True,
-        )
-        return items, evaluations
-
-    def submit(self, evaluations: Iterable[Evaluation]) -> list[DownloadReceipt]:
-        return self.submit_candidates(
-            result.candidate for result in evaluations if result.accepted
-        )
-
-    def submit_candidates(self, candidates: Iterable[Candidate]) -> list[DownloadReceipt]:
-        receipts: list[DownloadReceipt] = []
-        for candidate in candidates:
-            route = next((route for route in self.routes if route.accepts(candidate)), None)
-            if route is None:
-                receipts.append(
-                    DownloadReceipt(candidate.identity, "skipped", message="no download route matched")
+            evaluations = [self.rules.evaluate(candidate) for candidate in candidates.values()]
+            evaluations.sort(key=evaluation_sort_key)
+            selected = select_candidate(evaluations)
+            if not evaluations:
+                status = ContentResultStatus.NO_CANDIDATE
+            elif selected is None:
+                status = ContentResultStatus.FILTERED
+            else:
+                status = ContentResultStatus.SELECTED
+            results.append(
+                ContentResult(
+                    item=item,
+                    status=status,
+                    evaluations=evaluations,
+                    selected=selected,
                 )
-                continue
-            receipts.append(route.submit(candidate))
-        return receipts
+            )
+        return results

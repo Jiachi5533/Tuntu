@@ -1,0 +1,28 @@
+services:
+  tuntu:
+    build:
+      context: .
+    image: tuntu:0.1.0-local
+    container_name: tuntu
+    restart: unless-stopped
+    ports:
+      - "${TUNTU_HTTP_PORT:-8000}:8000"
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - TUNTU_TIMEZONE
+      - TUNTU_ALLOWED_HOSTS=${TUNTU_ALLOWED_HOSTS:-*}
+      - TUNTU_COOKIE_SECURE=${TUNTU_COOKIE_SECURE:-false}
+      - TUNTU_LOG_LEVEL=${TUNTU_LOG_LEVEL:-INFO}
+    volumes:
+      - tuntu-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+
+volumes:
+  tuntu-data:

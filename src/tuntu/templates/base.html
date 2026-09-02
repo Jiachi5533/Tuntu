@@ -1,0 +1,54 @@
+{% from 'macros.html' import icon %}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{{ title }} · Tuntu</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/app.css') }}?v={{ asset_version }}">
+  <script src="{{ url_for('static', path='/app.js') }}?v={{ asset_version }}" defer></script>
+</head>
+<body data-page="{{ page }}">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="主导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">T</span>
+        <span><strong>Tuntu</strong><small>吞吐控制面</small></span>
+        <button class="icon-button sidebar-close" type="button" data-nav-close aria-label="关闭导航">{{ icon('close') }}</button>
+      </div>
+      <nav class="nav-list">
+        <a href="/dashboard" {% if page == 'dashboard' %}aria-current="page"{% endif %}>{{ icon('dashboard') }}<span>仪表盘</span></a>
+        <a href="/rankings" {% if page == 'rankings' %}aria-current="page"{% endif %}>{{ icon('rankings') }}<span>热榜</span></a>
+        <a href="/watchlists" {% if page == 'watchlists' %}aria-current="page"{% endif %}>{{ icon('watchlists') }}<span>关注清单</span></a>
+        <a href="/profiles" {% if page == 'profiles' %}aria-current="page"{% endif %}>{{ icon('profiles') }}<span>订阅</span></a>
+        <a href="/runs" {% if page == 'runs' %}aria-current="page"{% endif %}>{{ icon('runs') }}<span>运行记录</span></a>
+        <a href="/manual" {% if page == 'manual' %}aria-current="page"{% endif %}>{{ icon('manual') }}<span>手工任务</span></a>
+        <a href="/downloads" {% if page == 'downloads' %}aria-current="page"{% endif %}>{{ icon('downloads') }}<span>下载记录</span></a>
+        <a href="/sources" {% if page == 'sources' %}aria-current="page"{% endif %}>{{ icon('sources') }}<span>数据源</span></a>
+        <a href="/settings" {% if page == 'settings' %}aria-current="page"{% endif %}>{{ icon('settings') }}<span>系统设置</span></a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="user-chip"><span aria-hidden="true">{{ user.username[:1]|upper }}</span>{{ user.username }}</span>
+        <button class="button button-ghost button-full" type="button" data-action="logout">{{ icon('logout') }}退出登录</button>
+      </div>
+    </aside>
+    <button class="nav-scrim" type="button" data-nav-close aria-label="关闭导航"></button>
+    <section class="workspace">
+      <header class="topbar">
+        <button class="icon-button menu-button" type="button" data-nav-open aria-label="打开导航">{{ icon('menu') }}</button>
+        <div>
+          <p class="eyebrow">TUNTU / {{ page|upper }}</p>
+          <h1>{{ title }}</h1>
+        </div>
+        <div class="topbar-actions">{% block header_actions %}{% endblock %}</div>
+      </header>
+      <main id="main-content" class="content" tabindex="-1">
+        {% block content %}{% endblock %}
+      </main>
+    </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

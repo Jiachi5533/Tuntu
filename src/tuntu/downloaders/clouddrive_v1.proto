@@ -1,0 +1,132 @@
+// Minimal wire-compatible subset of CloudDrive2 API 1.0.14 used by Tuntu.
+// Official source: https://www.clouddrive2.com/api/clouddrive.proto
+syntax = "proto3";
+
+package clouddrive;
+
+import "google/protobuf/empty.proto";
+
+service CloudDriveFileSrv {
+  rpc GetSystemInfo(google.protobuf.Empty) returns (CloudDriveSystemInfo) {}
+  rpc GetToken(GetTokenRequest) returns (JWTToken) {}
+  rpc GetSubFiles(ListSubFileRequest) returns (stream SubFilesReply) {}
+  rpc CreateFolder(CreateFolderRequest) returns (CreateFolderResult) {}
+  rpc AddOfflineFiles(AddOfflineFileRequest) returns (FileOperationResult) {}
+  rpc ListOfflineFilesByPath(FileRequest) returns (OfflineFileListResult) {}
+  rpc GetRuntimeInfo(google.protobuf.Empty) returns (RuntimeInfo) {}
+}
+
+message CloudDriveSystemInfo {
+  bool IsLogin = 1;
+  string UserName = 2;
+  bool SystemReady = 3;
+  optional string SystemMessage = 4;
+  optional bool hasError = 5;
+}
+
+message GetTokenRequest {
+  string userName = 1;
+  string password = 2;
+  optional string totpCode = 3;
+}
+
+message JWTToken {
+  bool success = 1;
+  string errorMessage = 2;
+  string token = 3;
+}
+
+message FileRequest {
+  string path = 1;
+  optional bool forceRefresh = 2;
+}
+
+message FileOperationResult {
+  bool success = 1;
+  string errorMessage = 2;
+  repeated string resultFilePaths = 3;
+}
+
+message CreateFolderRequest {
+  string parentPath = 1;
+  string folderName = 2;
+}
+
+message CreateFolderResult {
+  CloudDriveFile folderCreated = 1;
+  FileOperationResult result = 2;
+}
+
+message ListSubFileRequest {
+  string path = 1;
+  bool forceRefresh = 2;
+  optional bool checkExpires = 3;
+}
+
+message AddOfflineFileRequest {
+  string urls = 1;
+  string toFolder = 2;
+  optional uint64 checkFolderAfterSecs = 3;
+}
+
+message SubFilesReply {
+  repeated CloudDriveFile subFiles = 1;
+}
+
+message CloudDriveFile {
+  string id = 1;
+  string name = 2;
+  string fullPathName = 3;
+  int64 size = 4;
+
+  enum FileType {
+    Directory = 0;
+    File = 1;
+    Other = 2;
+  }
+
+  FileType fileType = 5;
+  bool isDirectory = 30;
+  bool isRoot = 31;
+  bool isCloudRoot = 32;
+  bool isCloudDirectory = 33;
+  bool isCloudFile = 34;
+}
+
+message RuntimeInfo {
+  string productName = 1;
+  string productVersion = 2;
+  string CloudAPIVersion = 3;
+  string osInfo = 4;
+}
+
+message OfflineStatus {
+  uint32 quota = 1;
+  uint32 total = 2;
+}
+
+enum OfflineFileStatus {
+  OFFLINE_INIT = 0;
+  OFFLINE_DOWNLOADING = 1;
+  OFFLINE_FINISHED = 2;
+  OFFLINE_ERROR = 3;
+  OFFLINE_UNKNOWN = 4;
+}
+
+message OfflineFile {
+  string name = 1;
+  uint64 size = 2;
+  string url = 3;
+  OfflineFileStatus status = 4;
+  string infoHash = 5;
+  string fileId = 6;
+  uint64 add_time = 7;
+  string parentId = 8;
+  double percendDone = 9;
+  uint64 peers = 10;
+}
+
+message OfflineFileListResult {
+  repeated OfflineFile offlineFiles = 1;
+  OfflineStatus status = 2;
+}

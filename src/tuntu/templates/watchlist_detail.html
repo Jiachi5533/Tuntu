@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon, badge, empty %}
+{% block header_actions %}<a class="button button-secondary" href="/watchlists">返回清单</a>{% endblock %}
+{% block content %}
+<section class="detail-hero panel">
+  <div><p class="eyebrow">{{ watchlist.subject_type|upper }} WATCHLIST</p><h2>{{ watchlist.query }}</h2><p class="muted">{% if watchlist.aliases %}别名：{{ watchlist.aliases|join('、') }}{% else %}未设置别名{% endif %}</p></div>
+  <div class="metric-inline"><span><strong>{{ watchlist.summary.total }}</strong>作品</span><span><strong>{{ watchlist.summary.get('pending', 0) }}</strong>待处理</span><span><strong>{{ watchlist.summary.get('downloaded', 0) }}</strong>已下载</span></div>
+</section>
+
+<div class="notice notice-info">{{ icon('alert') }}<div><strong>元数据与下载严格分离</strong><p>批量导入只保存元数据，不接收磁力或种子地址。自动处理会把待处理标识交给所选下载配置，由它的候选源、规则和目录完成后续步骤。</p></div></div>
+
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">AUTOMATION</p><h2>自动处理</h2><p class="muted">每天只查询待处理作品；已有、忽略和已产生下载任务的作品不会重复提交。</p></div>{{ badge('enabled' if watchlist.automation.enabled else 'disabled', '已启用' if watchlist.automation.enabled else '未启用') }}</div>
+  <form id="watchlist-automation-form" class="form-grid" data-watchlist-id="{{ watchlist.id }}" data-auto-submit="{{ 'true' if watchlist.automation.auto_submit else 'false' }}">
+    <div class="field"><label for="watchlist-profile">下载配置</label><select id="watchlist-profile" name="profile_id"><option value="">请选择</option>{% for profile in profiles %}<option value="{{ profile.id }}" {% if watchlist.automation.profile_id == profile.id %}selected{% endif %} {% if not profile.watchlist_compatible %}disabled{% endif %}>{{ profile.name }} · {{ profile.destination_subdir }}{% if not profile.watchlist_compatible %} · 不支持按标识查询{% endif %}</option>{% endfor %}</select><small>复用该配置的候选源、筛选规则、Top N 和 CD2 目录；至少需要一个查询型候选源。</small></div>
+    <div class="field"><label for="watchlist-daily-time">每日执行时间</label><input id="watchlist-daily-time" name="daily_time" type="time" step="60" value="{{ watchlist.automation.daily_time or '' }}"></div>
+    <div class="field field-wide switch-stack">
+      <div class="switch-row"><label class="switch"><input name="enabled" type="checkbox" {% if watchlist.automation.enabled %}checked{% endif %}><span aria-hidden="true"></span><strong>启用每日调度</strong></label><p>关闭后仍可手动预演或运行。</p></div>
+      <div class="switch-row emphasized"><label class="switch"><input name="auto_submit" type="checkbox" {% if watchlist.automation.auto_submit %}checked{% endif %}><span aria-hidden="true"></span><strong>筛选后自动提交 CloudDrive2</strong></label><p>关闭时只记录候选和筛选结果。</p></div>
+      <label class="consent-row"><input type="checkbox" name="rights_confirmed"><span>启用自动提交时，我确认只处理自己有权获取的内容</span></label>
+    </div>
+    <p class="form-error field-wide" data-form-error role="alert"></p>
+    <div class="field field-wide actions-row"><button class="button button-primary" type="submit">保存自动处理</button><button class="button button-secondary" type="button" data-action="run-watchlist" data-dry-run="true" data-watchlist-id="{{ watchlist.id }}">立即预演</button><button class="button button-secondary" type="button" data-action="run-watchlist" data-dry-run="false" data-watchlist-id="{{ watchlist.id }}">立即运行</button></div>
+  </form>
+</section>
+
+<section class="panel">
+  <details class="advanced-settings watchlist-import">
+    <summary><span><strong>导入作品元数据</strong><small>每行格式：唯一标识 | 可选标题 | 可选来源页面</small></span></summary>
+    <form id="watchlist-import-form" class="form-grid" data-watchlist-id="{{ watchlist.id }}">
+      <div class="field"><label for="import-namespace">标识命名空间</label><select id="import-namespace" name="namespace"><option value="jav">JAV 番号</option><option value="general">通用标识</option><option value="imdb">IMDb</option><option value="tmdb">TMDB</option></select></div>
+      <div class="field"><label for="import-source">元数据来源</label><input id="import-source" name="source_name" value="manual_metadata" maxlength="100" required></div>
+      <div class="field field-wide"><label for="import-items">作品清单 <span>*</span></label><textarea id="import-items" name="items" required placeholder="ABC-001 | 作品标题 | https://example.com/item\nABC-002"></textarea><small>来源页面仅作出处记录；magnet、torrent 与下载地址会被后端拒绝。</small></div>
+      <p class="form-error field-wide" data-form-error role="alert"></p>
+      <div class="field field-wide"><button class="button button-primary" type="submit">导入元数据</button></div>
+    </form>
+  </details>
+</section>
+
+<section class="panel">
+  <div class="panel-header"><div><p class="eyebrow">CATALOG ITEMS</p><h2>作品与处理状态</h2><p class="muted">下载状态来自真实任务记录；“已有”和“忽略”是人工标记。</p></div></div>
+  {% if watchlist['items'] %}<div class="watchlist-items">
+    {% for item in watchlist['items'] %}<article class="watchlist-item">
+      <div class="watchlist-item-cover">
+        {% if cover_display_mode != 'none' and item.metadata.get('cover_url') %}<img src="{{ item.metadata.cover_url }}" alt="{{ item.normalized_key }} 封面" class="ranking-cover cover-mode-{{ cover_display_mode }}" loading="lazy" referrerpolicy="no-referrer">
+        {% else %}<div class="cover-placeholder{% if cover_display_mode == 'none' %} cover-placeholder-private{% endif %}">{{ icon('watchlists') }}<span>{{ '封面已关闭' if cover_display_mode == 'none' else '暂无封面' }}</span></div>{% endif %}
+      </div>
+      <div class="watchlist-item-main">
+        <div class="watchlist-item-head"><div><code>{{ item.normalized_key }}</code><h3>{{ item.title or item.normalized_key }}</h3></div>{{ badge(item.state, {'pending': '待处理', 'owned': '已有', 'ignored': '忽略', 'downloaded': '已下载', 'submitting': '提交中', 'submitted': '已提交', 'downloading': '下载中', 'failed': '失败', 'attention_required': '需处理'}.get(item.state, item.state)) }}</div>
+        <div class="watchlist-item-meta"><span>来源 {{ item.source_name }}</span>{% if item.metadata.get('release_date') %}<span>发行 {{ item.metadata.release_date }}</span>{% endif %}{% if item.metadata.get('source_url') %}<a class="text-link" href="{{ item.metadata.source_url }}" target="_blank" rel="noopener noreferrer">查看元数据出处 {{ icon('external') }}</a>{% endif %}</div>
+        <div class="watchlist-state-actions" aria-label="更新 {{ item.normalized_key }} 状态"><button type="button" class="button button-ghost" data-action="watchlist-state" data-watchlist-id="{{ watchlist.id }}" data-content-id="{{ item.content_item_id }}" data-state="pending">待处理</button><button type="button" class="button button-ghost" data-action="watchlist-state" data-watchlist-id="{{ watchlist.id }}" data-content-id="{{ item.content_item_id }}" data-state="owned">已有</button><button type="button" class="button button-ghost" data-action="watchlist-state" data-watchlist-id="{{ watchlist.id }}" data-content-id="{{ item.content_item_id }}" data-state="ignored">忽略</button></div>
+        {% if item.download %}<a class="text-link" href="/downloads/{{ item.download.id }}">查看下载任务 {{ icon('chevron') }}</a>
+        {% else %}<details class="authorized-download"><summary>使用我有权访问的磁力链接</summary>
+          {% if profiles and runtime_configured %}<form class="form-stack" data-authorized-magnet data-watchlist-id="{{ watchlist.id }}" data-content-id="{{ item.content_item_id }}">
+            <label>下载配置<select name="profile_id" required>{% for profile in profiles %}<option value="{{ profile.id }}">{{ profile.name }} · {{ profile.destination_subdir }}</option>{% endfor %}</select></label>
+            <label>磁力链接<textarea name="magnet_uri" required maxlength="8000" placeholder="magnet:?xt=urn:btih:..."></textarea></label>
+            <label class="consent-row"><input type="checkbox" name="rights_confirmed" required><span>我确认有权使用所填链接</span></label>
+            <p class="form-error" data-form-error role="alert"></p><button class="button button-primary" type="submit">检查并提交</button>
+          </form>{% else %}<p class="muted">请先创建下载订阅并完成 CloudDrive2 配置。启用后仍需勾选“我确认有权使用所填链接”。</p>{% endif %}
+        </details>{% endif %}
+      </div>
+    </article>{% endfor %}
+  </div>{% else %}{{ empty('清单里还没有作品', '展开上方“导入作品元数据”，按每行一个唯一标识导入。') }}{% endif %}
+</section>
+{% endblock %}

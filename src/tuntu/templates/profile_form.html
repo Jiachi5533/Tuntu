@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import icon %}
+{% block header_actions %}<a class="button button-secondary" href="/profiles">返回列表</a><button class="button button-primary" type="submit" form="profile-form">保存订阅</button>{% endblock %}
+{% block content %}
+<form id="profile-form" class="form-layout" data-profile-id="{{ profile.id or '' }}" novalidate>
+  <section class="panel form-section">
+    <div class="panel-header"><div><p class="eyebrow">BASICS</p><h2>基本信息</h2></div></div>
+    <div class="form-grid">
+      <div class="field field-wide"><label for="profile-name">名称 <span aria-hidden="true">*</span></label><input id="profile-name" name="name" required maxlength="200" value="{{ profile.name }}"><small>用于区分运行、下载记录和目标目录。</small></div>
+      <div class="field"><label for="profile-scope">榜单周期</label><select id="profile-scope" name="scope">{% for scope in catalog.scopes %}<option value="{{ scope }}" {% if profile.scope == scope %}selected{% endif %}>{{ {'daily':'日榜','weekly':'周榜','monthly':'月榜'}[scope] }}</option>{% endfor %}</select></div>
+      <div class="field"><label for="profile-top-n">Top N</label><input id="profile-top-n" name="top_n" type="number" inputmode="numeric" min="1" max="100" value="{{ profile.top_n }}"></div>
+      <div class="field"><label for="profile-destination">CD2 子目录 <span aria-hidden="true">*</span></label><input id="profile-destination" name="destination_subdir" required maxlength="500" value="{{ profile.destination_subdir }}"><small>相对全局根目录，不能使用 <code>..</code>。</small></div>
+      <div class="field"><label for="profile-daily-time">每日执行时间</label><input id="profile-daily-time" name="daily_time" type="time" step="60" value="{{ profile.daily_time or '' }}"></div>
+    </div>
+    <div class="switch-row"><label class="switch"><input name="enabled" type="checkbox" {% if profile.enabled %}checked{% endif %}><span aria-hidden="true"></span><strong>启用调度</strong></label><p>关闭后保留历史和配置，但不再自动执行。</p></div>
+    <div class="switch-row emphasized"><label class="switch"><input name="auto_submit" type="checkbox" {% if profile.auto_submit %}checked{% endif %}><span aria-hidden="true"></span><strong>自动提交下载</strong></label><p>默认关闭。关闭时只预演并记录候选，不向 CD2 提交。</p></div>
+  </section>
+  <section class="panel form-section">
+    <div class="panel-header"><div><p class="eyebrow">SOURCES</p><h2>数据来源</h2><p class="muted">启用订阅时，至少选择一个榜单源和一个候选源。</p></div></div>
+    <fieldset><legend>榜单来源</legend><div class="choice-grid">{% for source in catalog.discovery %}<label class="choice-card"><input type="checkbox" name="discovery_sources" value="{{ source.name }}" {% if source.name in profile.discovery_sources %}checked{% endif %}><span>{{ icon('sources') }}<strong>{{ source.label }}</strong><small>支持 {{ source.scopes|join(' / ') }}</small></span></label>{% endfor %}</div></fieldset>
+    <fieldset><legend>候选磁力来源</legend><div class="choice-grid">{% for source in catalog.candidate %}<label class="choice-card"><input type="checkbox" name="candidate_sources" value="{{ source.name }}" {% if source.name in profile.candidate_sources %}checked{% endif %}><span>{{ icon('downloads') }}<strong>{{ source.label }}</strong><small>公开 magnet 候选</small></span></label>{% endfor %}</div></fieldset>
+  </section>
+  <section class="panel form-section">
+    <div class="panel-header"><div><p class="eyebrow">RULES</p><h2>前置筛选规则</h2><p class="muted">“仅”规则要求证据明确为是；“排除”规则不会误伤未知项。</p></div></div>
+    {% set rules = profile.rules %}<div class="form-grid form-grid-three">
+      {% for key, label in [('chinese_subtitles','中文字幕'),('uncensored','无码状态'),('uhd','UHD')] %}<div class="field"><label for="rule-{{ key }}">{{ label }}</label><select id="rule-{{ key }}" name="rule_{{ key }}"><option value="any" {% if rules.get(key, 'any') == 'any' %}selected{% endif %}>不限</option><option value="only" {% if rules.get(key) == 'only' %}selected{% endif %}>仅接受</option><option value="exclude" {% if rules.get(key) == 'exclude' %}selected{% endif %}>排除</option></select></div>{% endfor %}
+      <div class="field"><label for="rule-min-size">最小体积 (MB)</label><input id="rule-min-size" name="rule_min_size_mb" type="number" min="0" step="0.1" value="{{ rules.get('min_size_mb', '') }}"></div>
+      <div class="field"><label for="rule-max-size">最大体积 (MB)</label><input id="rule-max-size" name="rule_max_size_mb" type="number" min="0" step="0.1" value="{{ rules.get('max_size_mb', '') }}"></div>
+      <div class="field"><label for="rule-min-seeders">最少做种数</label><input id="rule-min-seeders" name="rule_min_seeders" type="number" min="0" step="1" value="{{ rules.get('min_seeders', '') }}"></div>
+      <div class="field field-wide"><label for="rule-include">必须包含关键词</label><input id="rule-include" name="rule_include_keywords" maxlength="2000" value="{{ rules.get('include_keywords', [])|join(', ') }}"><small>多个关键词用英文逗号分隔，命中任意一个即可。</small></div>
+      <div class="field field-wide"><label for="rule-exclude">排除关键词</label><input id="rule-exclude" name="rule_exclude_keywords" maxlength="2000" value="{{ rules.get('exclude_keywords', [])|join(', ') }}"><small>命中任意一个即拒绝。</small></div>
+    </div>
+  </section>
+  <p class="form-error form-error-sticky" role="alert" data-form-error></p>
+</form>
+{% endblock %}
